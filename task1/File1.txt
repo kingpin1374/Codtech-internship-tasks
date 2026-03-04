@@ -1,2 +1,0 @@
-hey this is a file to create a merge conflickt 
-and this is the third line to create the merge conflict
