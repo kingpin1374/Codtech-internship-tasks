@@ -19,7 +19,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
-          passwd: ${{ secrets.EC2_PASSWD }}
+          password: ${{ secrets.EC2_PASSWORD }}
           debug: true
           script: |
             # Navigate to your project folder on EC2
