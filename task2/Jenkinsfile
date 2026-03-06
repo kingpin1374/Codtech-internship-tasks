@@ -13,8 +13,8 @@ pipeline {
             steps {
                 // This uses the credentials stored in Jenkins to authenticate
                 checkout([$class: 'GitSCM', 
-                    branches: [[name: '*/main']], 
-                    userRemoteConfigs: [[url: 'YOUR_GITHUB_REPO_URL', credentialsId: "${GITHUB_CREDS}"]]
+                    branches: [[name: '*/master']], 
+                    userRemoteConfigs: [[url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git', credentialsId: "${GITHUB_CREDS}"]]
                 ])
             }
         }
@@ -64,7 +64,7 @@ pipeline {
             echo "Pipeline Execution Finished."
         }
         success {
-            echo "Uniform Wala App is LIVE at http://localhost:9000"
+            echo "Uniform Wala App is LIVE at http://ec2-IPv4:9000"
         }
         failure {
             echo "Deployment failed. Check the Jenkins Console Output."
