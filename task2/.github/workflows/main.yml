@@ -5,7 +5,7 @@ on:
     branches: [ master ]
     paths:
       - 'task2/**'
-
+  workflow_dispatch: # This line enables the manual "Run workflow" button
 jobs:
   deploy:
     runs-on: ubuntu-latest
