@@ -36,3 +36,14 @@ jobs:
             fuser -k 9000/tcp || true
             nohup python3 app.py > output.log 2>&1 &
             echo "Deployment successful on EC2!"
+            - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          debug: true  # <--- Add this line for better error messages
+          script: |
+            cd ~/Codtech-internship-tasks/task2
+            git pull origin master
+            # ... rest of your script
