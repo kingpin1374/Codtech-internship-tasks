@@ -1,0 +1,68 @@
+pipeline {
+    agent any
+
+    environment {
+        // Define the virtual environment directory
+        VENV = "venv"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                // Pulls code from your repository
+                checkout scm
+            }
+        }
+
+        stage('Setup Environment') {
+            steps {
+                sh """
+                python3 -m venv ${VENV}
+                ./${VENV}/bin/pip install --upgrade pip
+                ./${VENV}/bin/pip install -r requirements.txt
+                """
+            }
+        }
+
+        stage('Lint & Test') {
+            steps {
+                // Running a simple syntax check or tests
+                sh "./${VENV}/bin/python -m compileall ."
+                // If you have a test folder, uncomment the next line:
+                // sh "./${VENV}/bin/pytest"
+            }
+        }
+
+        stage('Package') {
+            steps {
+                echo "Packaging Uniform Wala application..."
+                // This is where you would build a Docker image or a zip file
+                sh "tar -czf app.tar.gz . --exclude=${VENV}"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "Deploying to Production Server..."
+                // For your internship demo, you can run it in the background:
+                sh """
+                # Kill existing process if running on port 9000
+                fuser -k 9000/tcp || true 
+                nohup ./${VENV}/bin/python app.py > output.log 2>&1 &
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline Execution Finished."
+        }
+        success {
+            echo "Uniform Wala App is LIVE at http://localhost:9000"
+        }
+        failure {
+            echo "Deployment failed. Check the Jenkins Console Output."
+        }
+    }
+}
