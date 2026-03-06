@@ -5,7 +5,8 @@ on:
     branches: [ master ]
     paths:
       - 'task2/**'
-  workflow_dispatch: # This line enables the manual "Run workflow" button
+  workflow_dispatch: 
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -19,9 +20,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
+          debug: true
           script: |
             # Navigate to your project folder on EC2
-            # (Assumes you have already cloned the repo once on the server)
             cd ~/Codtech-internship-tasks/task2
             
             # Pull the latest changes
@@ -36,14 +37,3 @@ jobs:
             fuser -k 9000/tcp || true
             nohup python3 app.py > output.log 2>&1 &
             echo "Deployment successful on EC2!"
-            - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          debug: true  # <--- Add this line for better error messages
-          script: |
-            cd ~/Codtech-internship-tasks/task2
-            git pull origin master
-            # ... rest of your script
