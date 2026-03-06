@@ -1,0 +1,58 @@
+name: Task 2 - Uniform Wala CI/CD
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'task2/**' # Only run if task2 files change
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    # This ensures all 'run' steps happen inside the task2 folder
+    defaults:
+      run:
+        working-directory: ./task2
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }} # Built-in GitHub credential
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint & Test (Compile Check)
+        run: |
+          python -m compileall .
+
+      - name: Package Application
+        run: |
+          echo "Packaging Uniform Wala application..."
+          tar -czf app.tar.gz . --exclude=venv
+
+      - name: Deploy (Simulated)
+        run: |
+          echo "Deploying to Production Server..."
+          # Note: GitHub runners are temporary. To deploy to a real EC2, 
+          # you would use an SSH action here.
+          nohup python app.py > output.log 2>&1 &
+          sleep 5
+          echo "Uniform Wala App is running locally on the runner for validation."
+
+      - name: Post Execution Success
+        if: success()
+        run: echo "Uniform Wala App is LIVE (Simulation)"
+
+      - name: Post Execution Failure
+        if: failure()
+        run: echo "Deployment failed. Check the Action logs."
