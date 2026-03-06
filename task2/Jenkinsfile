@@ -1,16 +1,21 @@
 pipeline {
     agent any
-
+    triggers {
+        githubPush()
+    }
     environment {
-        // Define the virtual environment directory
+        GITHUB_CREDS = 'github' 
         VENV = "venv"
     }
 
     stages {
-        stage('Checkout') {
+      stage('Checkout & Credentials') {
             steps {
-                // Pulls code from your repository
-                checkout scm
+                // This uses the credentials stored in Jenkins to authenticate
+                checkout([$class: 'GitSCM', 
+                    branches: [[name: '*/main']], 
+                    userRemoteConfigs: [[url: 'YOUR_GITHUB_REPO_URL', credentialsId: "${GITHUB_CREDS}"]]
+                ])
             }
         }
 
