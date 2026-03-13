@@ -34,7 +34,7 @@ pipeline{
     }
     stage ('activate venv') {
       steps [
-        sh 'source venv/bin/activate'
+        sh './venv/bin/pip install flask'
       ]
     }
     stage ('install requirements') {
