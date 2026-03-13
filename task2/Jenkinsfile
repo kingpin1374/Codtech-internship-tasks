@@ -10,12 +10,6 @@ pipeline{
     githubPush()
   }
   stages{
-    stage ('update'){
-      steps {
-        sh 'sudo apt update && sudo apt upgrade || echo "update successfully"'
-      }
-    }
-
     stage ('copy repo'){
       steps {
         git branch: 'master', url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git', credentialsId: 'github'
