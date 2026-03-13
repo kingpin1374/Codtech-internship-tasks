@@ -1,4 +1,4 @@
-name: Task 2 - Deploy to EC2
+name: task2-deploy-to-ec2
 
 on:
   push:
