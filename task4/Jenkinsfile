@@ -12,7 +12,7 @@ pipeline {
         stage('Build & Load') {
             steps {
                 // Build the image locally and load it into your Kind cluster
-                sh "docker build -t uniform-wala:local -f task3/Dockerfile task3/"
+                sh "docker build -t uniform-wala:local -f task4/Dockerfile task4/"
                 sh "kind load docker-image uniform-wala:local --name kind"
             }
         }
