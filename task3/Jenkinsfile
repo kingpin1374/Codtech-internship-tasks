@@ -40,11 +40,16 @@ pipeline {
                 sh "kind load docker-image uniform-wala:local"
             }
         }
-        stage('Deploy') {
-            steps {
-                sh "kubectl apply -f deployment.yaml"
-                sh "kubectl apply -f service.yaml"
-                sh "kubectl rollout status deployment/uniform-wala-app"
+     stage('Deploy') {
+    steps {
+        script {
+            // Move into the task3 folder where your YAML files are located
+            dir('task3') {
+                sh 'kubectl apply -f deployment.yaml'
+                sh 'kubectl apply -f service.yaml'
+                
+                // This command ensures the deployment actually works before finishing
+                sh 'kubectl rollout status deployment/uniform-wala-app'
             }
         }
     }
