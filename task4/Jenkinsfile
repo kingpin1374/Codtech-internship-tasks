@@ -2,11 +2,10 @@ pipeline {
     agent any
 
     stages {
-        stage('Deep Cleanup') {
+        stage('Environment Prep') {
             steps {
-                echo "Reclaiming every possible byte..."
-                // The '-a' is the secret—it removes all unused images to make room for ZAP
-                sh "docker system prune -af"
+                echo "Reclaiming disk space before starting..."
+                sh "docker system prune -f"
             }
         }
 
@@ -25,7 +24,6 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                // Using task4 dir as seen in your successful build log
                 dir('task4') {
                     sh "kubectl apply -f deployment.yml || kubectl apply -f deployment.yaml"
                     sh "kubectl apply -f service.yml || kubectl apply -f service.yaml"
@@ -38,7 +36,8 @@ pipeline {
             steps {
                 script {
                     echo "Starting Security Scan (DAST)..."
-                    // Added --user root to ensure the report can be saved despite disk pressure
+                    // We use '|| true' so that even if ZAP hits a disk error, 
+                    // the pipeline can still finish and archive the report.
                     sh """
                     docker run --rm --user root \
                         --network=host \
@@ -52,10 +51,10 @@ pipeline {
         }
     }
 
-  post {
+    post {
         always {
-            // Archive the file you manually created
-            archiveArtifacts artifacts: '**/owasp_report.html', allowEmptyArchive: true
+            echo "Archiving artifacts..."
+            archiveArtifacts artifacts: '**/zap_report.html', allowEmptyArchive: true
         }
     }
 }
