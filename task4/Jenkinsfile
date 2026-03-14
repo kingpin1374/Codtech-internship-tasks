@@ -13,18 +13,20 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                script {
-                    def scannerHome = tool 'SonarQubeScanner'
-                    withSonarQubeEnv("${SONAR_SERVER}") {
-                        sh "${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=UniformWala \
-                            -Dsonar.sources=task3/ \
-                            -Dsonar.host.url=http://your-sonarqube-ip:9000"
-                    }
-                }
-            }
+    steps {
+        script {
+            sh """
+            docker run --rm \
+                -e SONAR_HOST_URL='http://13.233.231.115:9000' \
+                -e SONAR_TOKEN='Jenkins-Token' \
+                -v ${WORKSPACE}:/usr/src \
+                sonarsource/sonar-scanner-cli \
+                -Dsonar.projectKey=UniformWala \
+                -Dsonar.sources=task3/
+            """
         }
+    }
+}
 
         stage('Build & Load') {
             steps {
