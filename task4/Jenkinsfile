@@ -1,0 +1,69 @@
+pipeline {
+    agent any
+
+    environment {
+        // Define your SonarQube Server name as configured in Jenkins
+        SONAR_SERVER = 'SonarQube-Server'
+    }
+
+    stages {
+        stage('Cloning Repo') {
+            steps {
+                git branch: 'master', url: 'https://github.com/your-repo/tasks.git'
+            }
+        }
+
+        // --- NEW: SAST STAGE ---
+        stage('SonarQube Analysis') {
+            steps {
+                script {
+                    // This block sends your code to SonarQube for scanning
+                    def scannerHome = tool 'SonarQubeScanner'
+                    withSonarQubeEnv("${SONAR_SERVER}") {
+                        sh "${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=UniformWala \
+                            -Dsonar.sources=task3/ \
+                            -Dsonar.host.url=http://your-sonarqube-ip:9000"
+                    }
+                }
+            }
+        }
+
+        stage('Build & Load') {
+            steps {
+                sh "docker build -t uniform-wala:local -f task3/Dockerfile task3/"
+                sh "kind load docker-image uniform-wala:local --name kind"
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                dir('task3') {
+                    sh 'kubectl apply -f deployment.yaml'
+                    sh 'kubectl apply -f service.yaml'
+                    sh 'kubectl rollout status deployment/uniform-wala-app'
+                }
+            }
+        }
+
+        // --- NEW: DAST STAGE ---
+        stage('OWASP ZAP Scan') {
+            steps {
+                script {
+                    echo "Starting Dynamic Security Scan..."
+                    // We run ZAP as a Docker container to scan our deployed app
+                    // Replace <EC2_IP> with your actual public IP
+                    sh "docker run --rm -v $(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+                        -t http://<YOUR_EC2_IP>:8081 -r zap_report.html || true"
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Archive the security reports so you can download them for your deliverable
+            archiveArtifacts artifacts: 'zap_report.html', fingerprint: true
+        }
+    }
+}
