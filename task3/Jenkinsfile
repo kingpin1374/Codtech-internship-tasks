@@ -11,6 +11,22 @@ pipeline {
                     credentialsId: 'github'
         }
       }
+        stage('Setup Environment') {
+            steps {
+                script {
+                    echo "Checking for Kind cluster..."
+                    // This command checks if a cluster named 'kind' already exists
+                    def clusterStatus = sh(script: "kind get clusters | grep -q '^kind$'", returnStatus: true)
+                    
+                    if (clusterStatus != 0) {
+                        echo "Cluster not found. Creating Kind cluster..."
+                        sh "kind create cluster --name kind"
+                    } else {
+                        echo "Kind cluster is already running. Proceeding..."
+                    }
+                }
+            }
+        }
        stage('Build Image') {
     steps {
         // -f tells docker exactly where the file is
