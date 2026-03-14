@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uniform-wala-app
+  labels:
+    app: uniform-wala
+spec:
+  replicas: 2 # Runs two instances for reliability
+  selector:
+    matchLabels:
+      app: uniform-wala
+  template:
+    metadata:
+      labels:
+        app: uniform-wala
+    spec:
+      containers:
+      - name: flask-container
+        image: your-dockerhub-username/uniform-wala:v1 # Replace with your pushed image
+        ports:
+        - containerPort: 9000
+        resources:
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
