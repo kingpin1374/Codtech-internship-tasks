@@ -18,7 +18,7 @@ pipeline {
             sh """
             docker run --rm \
                 -e SONAR_HOST_URL='http://13.233.231.115:9000' \
-                -e SONAR_TOKEN='Jenkins-Token' \
+                -e SONAR_TOKEN='11b095c606f90a655dc490df1ab1768ada' \
                 -v ${WORKSPACE}:/usr/src \
                 sonarsource/sonar-scanner-cli \
                 -Dsonar.projectKey=UniformWala \
