@@ -32,11 +32,15 @@ stage('Setup & Install') {
         '''
     }
 }
-    stage ('build and deploy') {
-      steps {
-        sh 'python3 app.py'
-      }
+    stage('build and deploy') {
+    steps {
+        sh '''
+            cd task2
+            ../venv/bin/python app.py & 
+            sleep 5
+        '''
     }
+}
   }
   
 }
