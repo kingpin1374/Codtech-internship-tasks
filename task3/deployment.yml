@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: flask-container
-        image: your-dockerhub-username/uniform-wala:v1 # Replace with your pushed image
+        image: your-dockerhub-username/uniform-wala:local # Replace with your pushed image
         ports:
         - containerPort: 9000
         resources:
