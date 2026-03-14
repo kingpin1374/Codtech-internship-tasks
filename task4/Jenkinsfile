@@ -11,13 +11,13 @@ pipeline {
                 git branch: 'master', url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git'
             }
         }
-
-        stage('SonarQube Analysis') {
+stage('SonarQube Analysis') {
     steps {
         script {
             sh """
             docker run --rm \
-                -e SONAR_HOST_URL='http://172.17.0.1:9000' \
+                --network=host \
+                -e SONAR_HOST_URL='http://127.0.0.1:9000' \
                 -e SONAR_TOKEN='11b095c606f90a655dc490df1ab1768ada' \
                 -v ${WORKSPACE}:/usr/src \
                 sonarsource/sonar-scanner-cli \
