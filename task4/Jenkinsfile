@@ -1,35 +1,17 @@
 pipeline {
     agent any
 
-    environment {
-        SONAR_SERVER = 'SonarQube-Server'
-    }
-
     stages {
         stage('Cloning Repo') {
             steps {
+                // Pulls the latest code from your internship repository
                 git branch: 'master', url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git'
             }
         }
-stage('SonarQube Analysis') {
-    steps {
-        script {
-            sh """
-            docker run --rm \
-                --network=host \
-                -e SONAR_HOST_URL='http://127.0.0.1:9000' \
-                -e SONAR_TOKEN='11b095c606f90a655dc490df1ab1768ada' \
-                -v ${WORKSPACE}:/usr/src \
-                sonarsource/sonar-scanner-cli \
-                -Dsonar.projectKey=UniformWala \
-                -Dsonar.sources=task3/
-            """
-        }
-    }
-}
 
         stage('Build & Load') {
             steps {
+                // Build the image locally and load it into your Kind cluster
                 sh "docker build -t uniform-wala:local -f task3/Dockerfile task3/"
                 sh "kind load docker-image uniform-wala:local --name kind"
             }
@@ -38,6 +20,7 @@ stage('SonarQube Analysis') {
         stage('Deploy') {
             steps {
                 dir('task3') {
+                    // Apply manifests and wait for the app to be ready
                     sh 'kubectl apply -f deployment.yaml'
                     sh 'kubectl apply -f service.yaml'
                     sh 'kubectl rollout status deployment/uniform-wala-app'
@@ -48,19 +31,25 @@ stage('SonarQube Analysis') {
         stage('OWASP ZAP Scan') {
             steps {
                 script {
-                    echo "Starting Dynamic Security Scan..."
-                    // Replace <YOUR_EC2_IP> with your actual public IP address
-                    sh "docker run --rm -v ${WORKSPACE}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-                        -t http://<YOUR_EC2_IP>:8081 -r zap_report.html || true"
+                    echo "Starting Dynamic Security Scan (DAST)..."
+                    // Scans the running app at port 8081 using the Docker internal gateway
+                    sh """
+                    docker run --rm \
+                        -v ${WORKSPACE}:/zap/wrk/:rw \
+                        -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+                        -t http://172.17.0.1:8081 \
+                        -r zap_report.html || true
+                    """
                 }
             }
         }
-    } // <-- Ends stages
+    }
 
-    post { // <-- post is a sibling to stages, both inside pipeline
+    post {
         always {
-            echo "Archiving security artifacts..."
+            echo "Pipeline finished. Saving the security report..."
+            // This file is your main deliverable for the CODTECH task
             archiveArtifacts artifacts: 'zap_report.html', fingerprint: true
         }
     }
-} // <-- Ends pipeline
+}
