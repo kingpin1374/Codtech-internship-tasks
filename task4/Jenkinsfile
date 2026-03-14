@@ -51,14 +51,13 @@ pipeline {
             steps {
                 script {
                     echo "Starting Dynamic Security Scan..."
-                    // We run ZAP as a Docker container to scan our deployed app
-                    // Replace <EC2_IP> with your actual public IP
-                    sh "docker run --rm -v $(pwd):/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
+                    // We use single quotes '' to tell Jenkins: "Don't touch the dollar signs"
+                    // Or we use the Jenkins ${WORKSPACE} variable
+                    sh "docker run --rm -v ${WORKSPACE}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
                         -t http://<YOUR_EC2_IP>:8081 -r zap_report.html || true"
                 }
             }
         }
-    }
 
     post {
         always {
