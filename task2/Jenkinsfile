@@ -4,7 +4,7 @@ pipeline {
     environment {
         APP_NAME = 'webbook'
         APP_PORT = '9000'
-        // CRITICAL: This stops Jenkins from killing your Flask app when the stage ends
+        // Prevents Jenkins from killing the Flask app process when the job finishes
         JENKINS_NODE_COOKIE = 'dontKillMe'
     }
 
@@ -13,12 +13,21 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                // Jenkins usually does this automatically, but keeping it as per your requirement
+                git branch: 'master', 
+                    url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git', 
+                    credentialsId: 'github'
+            }
+        }
+
         stage('Setup & Install') {
             steps {
                 sh '''
                     python3 -m venv venv
                     ./venv/bin/pip install --upgrade pip
-                    ./venv/bin/pip install flask gunicorn
+                    ./venv/bin/pip install flask
                     if [ -f requirements.txt ]; then
                         ./venv/bin/pip install -r requirements.txt
                     fi
@@ -29,24 +38,21 @@ pipeline {
         stage('Build and Deploy') {
             steps {
                 sh '''
+                    # Navigate to the folder where app.py is located
                     cd task2
                     
-                    # 1. Kill any old process running on port 9000 so the build doesn't fail
+                    # Kill any existing process on port 9000 to avoid 'Port already in use' errors
                     fuser -k ${APP_PORT}/tcp || true
                     
-                    # 2. Start the app using nohup (so it ignores hangup signals)
-                    # We pass the port env variable to the script
+                    # Run the app in the background using nohup
+                    # We use the venv python to ensure Flask is found
                     nohup ../venv/bin/python app.py --port=${APP_PORT} > app.log 2>&1 &
                     
-                    # 3. Give it a moment to boot up
-                    sleep 10
-                    echo "Deployment successful! App is running on port ${APP_PORT}"
+                    # Give it a few seconds to initialize
+                    sleep 5
+                    echo "Application is deploying on port ${APP_PORT}"
                 '''
             }
         }
     }
-}
-}
-  }
-  
 }
