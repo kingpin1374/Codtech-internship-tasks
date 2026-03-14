@@ -2,16 +2,22 @@ pipeline {
     agent any
 
     stages {
+        stage('Cleanup Environment') {
+            steps {
+                echo "Cleaning up old docker layers to save space..."
+                // This removes unused data so the ZAP image has room to download
+                sh "docker system prune -f"
+            }
+        }
+
         stage('Cloning Repo') {
             steps {
-                // Pulls the latest code from your internship repository
                 git branch: 'master', url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git'
             }
         }
 
         stage('Build & Load') {
             steps {
-                // Build the image locally and load it into your Kind cluster
                 sh "docker build -t uniform-wala:local -f task4/Dockerfile task4/"
                 sh "kind load docker-image uniform-wala:local --name kind"
             }
@@ -19,24 +25,22 @@ pipeline {
 
         stage('Deploy') {
             steps {
+                // Ensure the directory matches where your YAMLs are stored
                 dir('task3') {
-                    // Apply manifests and wait for the app to be ready
                     sh 'kubectl apply -f deployment.yml'
                     sh 'kubectl apply -f service.yml'
                     sh 'kubectl rollout status deployment/uniform-wala-app'
                 }
             }
         }
-stage('OWASP ZAP Scan') {
+
+        stage('OWASP ZAP Scan') {
             steps {
                 script {
-                    echo "Pulling ZAP image first to check space..."
-                    sh "docker pull ghcr.io/zaproxy/zaproxy:stable"
-                    
                     echo "Starting Dynamic Security Scan (DAST)..."
-                    // We use --network=host to ensure it can see the KinD service on 8081
+                    // Added --user root to prevent permission issues inside the workspace
                     sh """
-                    docker run --rm \
+                    docker run --rm --user root \
                         --network=host \
                         -v ${WORKSPACE}:/zap/wrk/:rw \
                         -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
@@ -46,13 +50,13 @@ stage('OWASP ZAP Scan') {
                 }
             }
         }
+    }
 
     post {
         always {
             echo "Pipeline finished. Saving the security report..."
-            // This file is your main deliverable for the CODTECH task
-            archiveArtifacts artifacts: 'zap_report.html', fingerprint: true
+            // allowEmptyArchive: true prevents the build from failing if ZAP crashes mid-scan
+            archiveArtifacts artifacts: 'zap_report.html', fingerprint: true, allowEmptyArchive: true
         }
     }
-}
 }
