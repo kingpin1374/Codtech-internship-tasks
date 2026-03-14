@@ -2,22 +2,19 @@ pipeline {
     agent any
 
     environment {
-        // Define your SonarQube Server name as configured in Jenkins
         SONAR_SERVER = 'SonarQube-Server'
     }
 
     stages {
         stage('Cloning Repo') {
             steps {
-                git branch: 'master', url: 'https://github.com/your-repo/tasks.git'
+                git branch: 'master', url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git'
             }
         }
 
-        // --- NEW: SAST STAGE ---
         stage('SonarQube Analysis') {
             steps {
                 script {
-                    // This block sends your code to SonarQube for scanning
                     def scannerHome = tool 'SonarQubeScanner'
                     withSonarQubeEnv("${SONAR_SERVER}") {
                         sh "${scannerHome}/bin/sonar-scanner \
@@ -46,24 +43,22 @@ pipeline {
             }
         }
 
-        // --- NEW: DAST STAGE ---
         stage('OWASP ZAP Scan') {
             steps {
                 script {
                     echo "Starting Dynamic Security Scan..."
-                    // We use single quotes '' to tell Jenkins: "Don't touch the dollar signs"
-                    // Or we use the Jenkins ${WORKSPACE} variable
+                    // Replace <YOUR_EC2_IP> with your actual public IP address
                     sh "docker run --rm -v ${WORKSPACE}:/zap/wrk/:rw -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
                         -t http://<YOUR_EC2_IP>:8081 -r zap_report.html || true"
                 }
             }
         }
+    } // <-- Ends stages
 
-    post {
+    post { // <-- post is a sibling to stages, both inside pipeline
         always {
-            // Archive the security reports so you can download them for your deliverable
+            echo "Archiving security artifacts..."
             archiveArtifacts artifacts: 'zap_report.html', fingerprint: true
         }
     }
-}
-}
+} // <-- Ends pipeline
