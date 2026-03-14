@@ -15,27 +15,23 @@ pipeline{
         git branch: 'master', url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git', credentialsId: 'github'
       }
     }
-
-    stage ('install venv') {
-      steps{
-      sh 'sudo apt install python3-venv -y'
-     }
-   }
-    stage ('activate the env') {
-      steps{
-        sh 'python3 -m venv venv'
-      }
+stage('Setup & Install') {
+    steps {
+        sh '''
+            # Create venv if it doesn't exist
+            python3 -m venv venv
+            
+            # Use the venv pip to install everything
+            ./venv/bin/pip install --upgrade pip
+            ./venv/bin/pip install flask
+            
+            # Check if requirements.txt exists before installing
+            if [ -f requirements.txt ]; then
+                ./venv/bin/pip install -r requirements.txt
+            fi
+        '''
     }
-    stage ('activate venv') {
-      steps {
-        sh './venv/bin/pip install flask'
-        }
-    }
-    stage ('install requirements') {
-      steps {
-        sh 'pip install requirement.txt'
-      }
-    }
+}
     stage ('build and deploy') {
       steps {
         sh 'python3 app.py'
