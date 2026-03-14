@@ -52,10 +52,11 @@ pipeline {
         }
     }
 
-    post {
+   post {
         always {
-            echo "Pipeline finished. Saving report..."
-            archiveArtifacts artifacts: 'zap_report.html', fingerprint: true, allowEmptyArchive: true
+            echo "Archiving the OWASP Security Report..."
+            // This pattern ensures Jenkins finds the file even if it's in a subfolder
+            archiveArtifacts artifacts: '**/zap_report.html', allowEmptyArchive: true
         }
     }
 }
