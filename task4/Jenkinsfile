@@ -27,23 +27,25 @@ pipeline {
                 }
             }
         }
-
-        stage('OWASP ZAP Scan') {
+stage('OWASP ZAP Scan') {
             steps {
                 script {
+                    echo "Pulling ZAP image first to check space..."
+                    sh "docker pull ghcr.io/zaproxy/zaproxy:stable"
+                    
                     echo "Starting Dynamic Security Scan (DAST)..."
-                    // Scans the running app at port 8081 using the Docker internal gateway
+                    // We use --network=host to ensure it can see the KinD service on 8081
                     sh """
                     docker run --rm \
+                        --network=host \
                         -v ${WORKSPACE}:/zap/wrk/:rw \
                         -t ghcr.io/zaproxy/zaproxy:stable zap-baseline.py \
-                        -t http://172.17.0.1:8081 \
+                        -t http://127.0.0.1:8081 \
                         -r zap_report.html || true
                     """
                 }
             }
         }
-    }
 
     post {
         always {
