@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     stages {
-        stage('Cleanup Environment') {
+        stage('Deep Cleanup') {
             steps {
-                echo "Cleaning up old docker layers to save space..."
-                // This removes unused data so the ZAP image has room to download
-                sh "docker system prune -f"
+                echo "Reclaiming every possible byte..."
+                // The '-a' is the secret—it removes all unused images to make room for ZAP
+                sh "docker system prune -af"
             }
         }
 
@@ -25,11 +25,11 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                // Ensure the directory matches where your YAMLs are stored
+                // Using task4 dir as seen in your successful build log
                 dir('task4') {
-                    sh 'kubectl apply -f deployment.yml'
-                    sh 'kubectl apply -f service.yml'
-                    sh 'kubectl rollout status deployment/uniform-wala-app'
+                    sh "kubectl apply -f deployment.yml || kubectl apply -f deployment.yaml"
+                    sh "kubectl apply -f service.yml || kubectl apply -f service.yaml"
+                    sh "kubectl rollout status deployment/uniform-wala-app"
                 }
             }
         }
@@ -37,8 +37,8 @@ pipeline {
         stage('OWASP ZAP Scan') {
             steps {
                 script {
-                    echo "Starting Dynamic Security Scan (DAST)..."
-                    // Added --user root to prevent permission issues inside the workspace
+                    echo "Starting Security Scan (DAST)..."
+                    // Added --user root to ensure the report can be saved despite disk pressure
                     sh """
                     docker run --rm --user root \
                         --network=host \
@@ -54,8 +54,7 @@ pipeline {
 
     post {
         always {
-            echo "Pipeline finished. Saving the security report..."
-            // allowEmptyArchive: true prevents the build from failing if ZAP crashes mid-scan
+            echo "Pipeline finished. Saving report..."
             archiveArtifacts artifacts: 'zap_report.html', fingerprint: true, allowEmptyArchive: true
         }
     }
