@@ -3,7 +3,8 @@ kind: Deployment
 metadata:
   name: uniform-wala-app
 spec:
-  replicas: 2
+  # 1. Lower replicas to 1 for now to save space
+  replicas: 1 
   selector:
     matchLabels:
       app: uniform-wala
@@ -19,6 +20,10 @@ spec:
         ports:
         - containerPort: 9000
         resources:
+          requests:
+            # 2. Lower CPU from 500m to 100m (10% of a core)
+            memory: "128Mi"
+            cpu: "100m"
           limits:
             memory: "256Mi"
-            cpu: "500m"
+            cpu: "200m"
