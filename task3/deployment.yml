@@ -13,14 +13,12 @@ spec:
     metadata:
       labels:
         app: uniform-wala
-    spec:
+   spec:
       containers:
       - name: flask-container
-        image: your-dockerhub-username/uniform-wala:local
-        imagePullPolicy: IfNotPresent
+        # 1. Update this to the local name used in your Jenkinsfile
+        image: uniform-wala:local 
+        # 2. Add this to force K8s to use the image already in the Kind node
+        imagePullPolicy: IfNotPresent 
         ports:
         - containerPort: 9000
-        resources:
-          limits:
-            memory: "256Mi"
-            cpu: "500m"
