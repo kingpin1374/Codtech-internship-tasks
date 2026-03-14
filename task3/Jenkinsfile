@@ -16,7 +16,7 @@ pipeline {
                 script {
                     echo "Checking for Kind cluster..."
                     // This command checks if a cluster named 'kind' already exists
-                    def clusterStatus = sh(script: "kind get clusters | grep -q '^kind$'", returnStatus: true)
+                    def clusterStatus = sh(script: 'kind get clusters | grep -q "^kind$"', returnStatus: true)
                     
                     if (clusterStatus != 0) {
                         echo "Cluster not found. Creating Kind cluster..."
