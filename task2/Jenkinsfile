@@ -1,45 +1,51 @@
-pipeline{
-  agent any
+pipeline {
+    agent any
 
-  environment{
-    APP_NAME = 'webbook'
-    APP_PORT = '9000'
-  }
-
-  triggers {
-    githubPush()
-  }
-  stages{
-    stage ('copy repo'){
-      steps {
-        git branch: 'master', url: 'https://github.com/kingpin1374/Codtech-internship-tasks.git', credentialsId: 'github'
-      }
+    environment {
+        APP_NAME = 'webbook'
+        APP_PORT = '9000'
+        // CRITICAL: This stops Jenkins from killing your Flask app when the stage ends
+        JENKINS_NODE_COOKIE = 'dontKillMe'
     }
-stage('Setup & Install') {
-    steps {
-        sh '''
-            # Create venv if it doesn't exist
-            python3 -m venv venv
-            
-            # Use the venv pip to install everything
-            ./venv/bin/pip install --upgrade pip
-            ./venv/bin/pip install flask
-            
-            # Check if requirements.txt exists before installing
-            if [ -f requirements.txt ]; then
-                ./venv/bin/pip install -r requirements.txt
-            fi
-        '''
+
+    triggers {
+        githubPush()
+    }
+
+    stages {
+        stage('Setup & Install') {
+            steps {
+                sh '''
+                    python3 -m venv venv
+                    ./venv/bin/pip install --upgrade pip
+                    ./venv/bin/pip install flask gunicorn
+                    if [ -f requirements.txt ]; then
+                        ./venv/bin/pip install -r requirements.txt
+                    fi
+                '''
+            }
+        }
+
+        stage('Build and Deploy') {
+            steps {
+                sh '''
+                    cd task2
+                    
+                    # 1. Kill any old process running on port 9000 so the build doesn't fail
+                    fuser -k ${APP_PORT}/tcp || true
+                    
+                    # 2. Start the app using nohup (so it ignores hangup signals)
+                    # We pass the port env variable to the script
+                    nohup ../venv/bin/python app.py --port=${APP_PORT} > app.log 2>&1 &
+                    
+                    # 3. Give it a moment to boot up
+                    sleep 10
+                    echo "Deployment successful! App is running on port ${APP_PORT}"
+                '''
+            }
+        }
     }
 }
-    stage('build and deploy') {
-    steps {
-        sh '''
-            cd task2
-            ../venv/bin/python app.py & 
-            sleep 5
-        '''
-    }
 }
   }
   
