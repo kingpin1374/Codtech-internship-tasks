@@ -11,11 +11,13 @@ pipeline {
                     credentialsId: 'github'
         }
       }
-        stage('Build Image') {
-            steps {
-                sh "docker build -t uniform-wala:local ."
-            }
-        }
+       stage('Build Image') {
+    steps {
+        // -f tells docker exactly where the file is
+        // the '.' at the end tells it to use the current folder as the "context"
+        sh "docker build -t uniform-wala:local -f task3/Dockerfile task3/"
+    }
+}
         stage('Load into Kind') {
             steps {
                 // This moves the image into the Kind cluster
